@@ -119,8 +119,8 @@ const getChannelMessages = async (channelNameOrId: string) => {
       messages: formattedMessages,
     };
   } catch (error) {
-    // Make sure to destroy the client even if there's an error
+    // エラーが発生しても必ずクライアント接続を閉じる
     client.destroy();
     throw error;
   }
-};
+  };
