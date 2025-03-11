@@ -20,6 +20,7 @@
     "@types/express": "^5.0.0",
     "@types/sharp": "^0.31.1",
     "cors": "^2.8.5",
+    "discord.js": "^14.18.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "google-auth-library": "^9.15.1",
