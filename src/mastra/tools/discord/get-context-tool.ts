@@ -16,7 +16,7 @@ interface DiscordMessage {
 
 export const getContextTool = createTool({
   id: "get-context",
-  description: "Get the latest 40 messages from a Discord channel",
+  description: "Get the latest 40 messages from a Discord channel、チャンネル名がよくわからない時はチャンネル一覧を確認して一番近いものを選んで",
   inputSchema: z.object({
     channel: z.string().describe("Discord channel name or ID to fetch messages from"),
   }),
