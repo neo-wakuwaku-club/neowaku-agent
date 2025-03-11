@@ -12,11 +12,13 @@
   "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "^1.2.1",
+    "@anthropic-ai/sdk": "^0.39.0",
     "@google-cloud/local-auth": "^2.1.0",
     "@mastra/core": "^0.4.4",
     "@mastra/memory": "^0.1.7",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/sharp": "^0.31.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
@@ -24,6 +26,7 @@
     "googleapis": "^100.0.0",
     "mastra": "^0.2.8",
     "openai": "^4.86.2",
+    "sharp": "^0.33.5",
     "ts-node": "^10.9.2",
     "zod": "^3.24.2"
   },
