@@ -321,31 +321,53 @@ async function generateFlyer(eventDetails: string, designInstructions: string = 
 }
 
 /**
- * Open files in browser
- * @param filePaths - Paths to the files to open
+ * Send image to Discord
+ * @param imagePath - Path to the image to send
+ * @param messageContext - Discord message context
+ * @returns Whether the image was sent successfully
  */
-function openFilesInBrowser(filePaths: string[]): void {
-  const openBrowser = (filePath: string) => {
-    const platform = process.platform;
-    const fileUrl = `file://${path.resolve(filePath)}`;
+async function sendImageToDiscord(imagePath: string, messageContext: any): Promise<boolean> {
+  try {
+    // Import discord.js types and client
+    const { discordClient } = await import('../../discord');
+    const { ChannelType } = await import('discord.js');
     
-    if (platform === 'darwin') {  // macOS
-      exec(`open "${fileUrl}"`);
-    } else if (platform === 'win32') {  // Windows
-      exec(`start "" "${fileUrl}"`);
-    } else {  // Linux and others
-      exec(`xdg-open "${fileUrl}"`);
+    // Get the channel
+    const channel = await discordClient.channels.fetch(messageContext.channelId);
+    
+    if (!channel) {
+      console.error("Discord画像送信失敗: チャンネルが見つかりません");
+      return false;
     }
-  };
-  
-  // Open files with a delay between each
-  filePaths.forEach((filePath, index) => {
-    if (filePath) {
-      setTimeout(() => {
-        openBrowser(filePath);
-      }, index * 1500);
+    
+    // Check if it's a text channel
+    if (channel.type === ChannelType.GuildText || 
+        channel.type === ChannelType.DM || 
+        channel.type === ChannelType.PublicThread || 
+        channel.type === ChannelType.PrivateThread) {
+      
+      // Use the appropriate method based on channel type
+      // @ts-ignore - We've already checked the channel type
+      await channel.send({
+        files: [{
+          attachment: imagePath,
+          name: path.basename(imagePath)
+        }]
+      });
+      
+      console.log(`Discord画像送信成功: ${imagePath}`);
+      return true;
     }
-  });
+    
+    console.error(`Discord画像送信失敗: サポートされていないチャンネルタイプ: ${channel.type}`);
+    return false;
+  } catch (error) {
+    console.error("Discord画像送信中にエラーが発生しました:", error);
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
+    return false;
+  }
 }
 
 // Create the flyer generator tool
@@ -355,11 +377,16 @@ export const flyerGeneratorTool = createTool({
   inputSchema: z.object({
     eventDetails: z.string().describe("Event details to include in the flyer"),
     designInstructions: z.string().optional().describe("Additional design instructions or preferences for the flyer"),
+    discordMessageContext: z.object({
+      messageId: z.string(),
+      channelId: z.string()
+    }).optional().describe("Discord message context for sending the flyer back"),
   }),
   outputSchema: z.object({
     backgroundPath: z.string(),
     svgPath: z.string(),
     combinedPath: z.string().nullable(),
+    sentToDiscord: z.boolean().optional(),
   }),
   execute: async ({ context }) => {
     const result = await generateFlyer(
@@ -367,11 +394,19 @@ export const flyerGeneratorTool = createTool({
       context.designInstructions || ""
     );
     
-    // Open files in browser
-    if (result.combinedPath) {
-      openFilesInBrowser([result.combinedPath, result.backgroundPath, result.svgPath]);
+    let sentToDiscord = false;
+    
+    // Send to Discord if context is provided and combined image exists
+    if (context.discordMessageContext && result.combinedPath) {
+      console.log(`Sending flyer to Discord channel: ${context.discordMessageContext.channelId}`);
+      sentToDiscord = await sendImageToDiscord(result.combinedPath, context.discordMessageContext);
+    } else {
+      console.log(`No Discord message context provided or no combined image path`);
     }
     
-    return result;
+    return {
+      ...result,
+      sentToDiscord
+    };
   },
 });

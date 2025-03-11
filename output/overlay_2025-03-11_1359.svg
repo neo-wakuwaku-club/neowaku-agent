@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg">
+  <!-- 半透明の背景パネル -->
+  <rect x="100" y="200" width="880" height="680" rx="20" ry="20" fill="rgba(255, 255, 255, 0.85)" />
+  
+  <!-- 装飾要素: 技術と科学のテーマを反映した図形 -->
+  <circle cx="180" cy="140" r="40" fill="rgba(255, 102, 0, 0.7)" />
+  <circle cx="900" cy="140" r="40" fill="rgba(0, 153, 255, 0.7)" />
+  <polygon points="540,80 580,140 500,140" fill="rgba(102, 204, 0, 0.7)" />
+  
+  <!-- 接続線 -->
+  <path d="M180,140 Q540,50 900,140" stroke="rgba(150,150,150,0.5)" stroke-width="3" fill="none" />
+  
+  <!-- イベント名 -->
+  <text x="540" y="300" font-family="'Noto Sans JP', sans-serif" font-size="72" font-weight="700" text-anchor="middle" fill="#FF5722">
+    わくわくLT会
+  </text>
+  
+  <!-- 日時 -->
+  <text x="540" y="380" font-family="'Noto Sans JP', sans-serif" font-size="42" font-weight="500" text-anchor="middle" fill="#333333">
+    2025年2月5日
+  </text>
+  
+  <!-- 発表者ラベル -->
+  <text x="540" y="450" font-family="'Noto Sans JP', sans-serif" font-size="36" font-weight="500" text-anchor="middle" fill="#666666">
+    発表者
+  </text>
+  
+  <!-- 発表者リスト（2列に分割） -->
+  <g font-family="'Noto Sans JP', sans-serif" font-size="28" fill="#333333" text-anchor="middle">
+    <!-- 左列 -->
+    <text x="370" y="510">ジャン</text>
+    <text x="370" y="560">塩畑晴人</text>
+    <text x="370" y="610">持丸理貴</text>
+    <text x="370" y="660">濵本夏芽</text>
+    
+    <!-- 右列 -->
+    <text x="710" y="510">藤原安路</text>
+    <text x="710" y="560">纐纈泰暉</text>
+    <text x="710" y="610">山名琢翔</text>
+    <text x="710" y="660">岸田健吾</text>
+  </g>
+  
+  <!-- Google Meet URL -->
+  <text x="540" y="740" font-family="'Noto Sans JP', sans-serif" font-size="28" font-weight="500" text-anchor="middle" fill="#0288D1">
+    Google Meet URL
+  </text>
+  <text x="540" y="790" font-family="'Noto Sans JP', sans-serif" font-size="24" text-anchor="middle" fill="#333333">
+    前半 - https://meet.google.com/poa-pnez-dks
+  </text>
+  <text x="540" y="830" font-family="'Noto Sans JP', sans-serif" font-size="24" text-anchor="middle" fill="#333333">
+    後半 - https://meet.google.com/cqw-crev-kxt
+  </text>
+  
+  <!-- 装飾的な要素 -->
+  <rect x="390" y="420" width="300" height="3" fill="#FF5722" />
+  <rect x="440" y="710" width="200" height="2" fill="#0288D1" />
+  
+  <!-- 角の装飾 -->
+  <path d="M100,220 L130,220 L130,250" stroke="#FF5722" stroke-width="3" fill="none" />
+  <path d="M980,220 L950,220 L950,250" stroke="#0288D1" stroke-width="3" fill="none" />
+  <path d="M100,860 L130,860 L130,830" stroke="#0288D1" stroke-width="3" fill="none" />
+  <path d="M980,860 L950,860 L950,830" stroke="#FF5722" stroke-width="3" fill="none" />
+</svg>
