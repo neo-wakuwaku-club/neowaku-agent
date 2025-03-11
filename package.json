@@ -9,17 +9,28 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "type": "module",
   "dependencies": {
     "@ai-sdk/openai": "^1.2.1",
+    "@google-cloud/local-auth": "^2.1.0",
     "@mastra/core": "^0.4.4",
+    "@mastra/memory": "^0.1.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "google-auth-library": "^9.15.1",
+    "googleapis": "^100.0.0",
     "mastra": "^0.2.8",
+    "openai": "^4.86.2",
+    "ts-node": "^10.9.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
-  }
+  },
+  "description": ""
 }
