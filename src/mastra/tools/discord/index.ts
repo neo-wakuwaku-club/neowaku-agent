@@ -6,4 +6,7 @@ export const discordTools = {
   listChannelsTool,
 };
 
-export { getContextTool, listChannelsTool };
+export { 
+  getContextTool, 
+  listChannelsTool
+};

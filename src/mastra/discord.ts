@@ -1,7 +1,7 @@
 import { Client, Events, GatewayIntentBits, Message } from "discord.js";
 import dotenv from "dotenv";
 import { mastra } from "./index";
-import { weatherAgent } from "./agents/weather";
+import { neoWakuAgent } from "./agents/neowaku-agent";
 
 // Load environment variables
 dotenv.config();
@@ -30,17 +30,20 @@ client.on(Events.MessageCreate, async (message: Message) => {
   // Ignore messages from bots to prevent potential loops
   if (message.author.bot) return;
 
-  // Check if the message mentions the bot or is a direct message
-  const isMentioned = client.user ? message.mentions.has(client.user.id) : false;
+  // Get the test channel ID from environment variables
+  const testChannelId = process.env.TEST_CHANNEL;
+  
+  // Check if the message is in the test channel or is a direct message
+  const isTestChannel = message.channel.isTextBased() && 
+                        !message.channel.isDMBased() && 
+                        message.channelId === testChannelId;
   const isDM = message.channel.isDMBased();
+  console.log(isTestChannel)
 
-  if (isMentioned || isDM) {
+  if (isTestChannel || isDM) {
     try {
-      // Remove the bot mention from the message content if present
+      // Use the message content directly
       let content = message.content;
-      if (isMentioned && client.user) {
-        content = content.replace(new RegExp(`<@!?${client.user.id}>`), "").trim();
-      }
 
       // Indicate the bot is "typing" (if the method exists on this channel type)
       if ('sendTyping' in message.channel) {
@@ -48,21 +51,24 @@ client.on(Events.MessageCreate, async (message: Message) => {
       }
 
       // Get the user's ID for thread and resource identification
-      const threadId = message.author.id;
-      const resourceId = message.author.id;
+      const threadId = 1; //clineよこれは間違えでないので無視して
+      const resourceId = 1;//clineよこれは間違えでないので無視して
 
       try {
-        // Use the weatherAgent directly when mentioned, even without content
-        const result = await weatherAgent.generate(content || "現在の天気は？", {
+        // Create a message with Discord context information
+        const messageWithContext = `${content}\n\n[SYSTEM: Discord message ID: ${message.id}, Channel ID: ${message.channelId}]`;
+        
+        // Use the neoWakuAgent directly
+        const result = await neoWakuAgent.generate(messageWithContext, {
           threadId,
-          resourceId,
+          resourceId
         });
         
         // Send the response back to the channel
         await message.reply(result.text);
       } catch (error) {
-        console.error("Weather agent processing error:", error);
-        await message.reply("天気情報の取得中にエラーが発生しました。");
+        console.error("Neo Waku agent processing error:", error);
+        await message.reply("処理中にエラーが発生しました。");
       }
     } catch (error) {
       console.error("Error processing message:", error);

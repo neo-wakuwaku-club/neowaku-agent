@@ -30,10 +30,16 @@ The tool will generate three files:
 2. An SVG text overlay created with Claude
 3. A combined flyer image that merges the background and text overlay
 
+When using the flyerGeneratorTool, always include the Discord message context to enable automatic Discord sending:
+- Look for Discord context information in the user's message in the format: [SYSTEM: Discord message ID: xxx, Channel ID: yyy]
+- Extract this information and pass it as discordMessageContext: { messageId: "xxx", channelId: "yyy" }
+- This allows the generated flyer to be automatically sent to Discord
+
 After generating the flyer, you MUST include the full file paths in your response:
 - Background image path
 - SVG overlay path
 - Combined flyer path
+- Whether the flyer was sent to Discord
 
 The flyer should include key information such as:
 - Event name/title
