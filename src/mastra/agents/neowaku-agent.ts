@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { getContextTool, listChannelsTool } from "../tools/discord";
+import { getContextTool, listChannelsTool, bookingRoomTool } from "../tools/discord";
 import { flyerGeneratorTool } from "../tools/flyer";
 
 
@@ -43,8 +43,15 @@ export const neoWakuAgent = new Agent({
 - 例：discordMessageContext: { messageId: "xxx", channelId: "yyy" }
 - これにより、生成されたフライヤーが自動的にDiscordに送信されます
 
+施設予約機能：
+- bookingRoomToolを使用して、部屋の名前を元に特定のチャンネルに施設利用届を出して欲しい旨を伝えるメッセージを投稿できます
+- メッセージには自動的にminetchiさんへのメンションが含まれます
+- ユーザーが「〇〇の部屋を予約したい」「〇〇の施設利用届を出して欲しい」などと言った場合は、この機能を使用してください
+- 部屋名を指定するだけで、適切なチャンネルに自動的にメッセージが送信されます
+- 追加情報がある場合は、additionalInfoパラメータとして渡すことができます
+
 常に礼儀正しく、役立つ情報を提供し、ユーザーのニーズに応えるよう努めてください。`,
   model: openai("gpt-4o"),
-  tools: { getContextTool, listChannelsTool,flyerGeneratorTool },
+  tools: { getContextTool, listChannelsTool, bookingRoomTool, flyerGeneratorTool },
   memory,
 });
