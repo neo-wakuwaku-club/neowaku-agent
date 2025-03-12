@@ -8,13 +8,13 @@ import { Memory } from "@mastra/memory";
 
 const memory = new Memory({
   options: {
+    lastMessages: 10,
     workingMemory: {
       enabled: true,
       template: "text-stream",
     },
   },
 });
- 
 export const neoWakuAgent = new Agent({
   name: "Neo Waku Agent",
   instructions: `あなたはDiscordの会話からコンテキストを提供する便利なアシスタント「neoわくエージェント」です。
