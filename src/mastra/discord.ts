@@ -30,17 +30,18 @@ client.on(Events.MessageCreate, async (message: Message) => {
   // Ignore messages from bots to prevent potential loops
   if (message.author.bot) return;
 
-  // Get the test channel ID from environment variables
-  const testChannelId = process.env.TEST_CHANNEL;
+  // Get the allowed channel IDs from environment variables (comma-separated list)
+  const allowedChannelIdsStr = process.env.ALLOWED_CHANNELS || process.env.TEST_CHANNEL || '';
+  const allowedChannelIds = allowedChannelIdsStr.split(',').map(id => id.trim()).filter(id => id);
   
-  // Check if the message is in the test channel or is a direct message
-  const isTestChannel = message.channel.isTextBased() && 
-                        !message.channel.isDMBased() && 
-                        message.channelId === testChannelId;
+  // Check if the message is in one of the allowed channels or is a direct message
+  const isAllowedChannel = message.channel.isTextBased() && 
+                          !message.channel.isDMBased() && 
+                          allowedChannelIds.includes(message.channelId);
   const isDM = message.channel.isDMBased();
-  console.log(isTestChannel)
+  console.log(`Channel ${message.channelId} allowed: ${isAllowedChannel}`);
 
-  if (isTestChannel || isDM) {
+  if (isAllowedChannel || isDM) {
     try {
       // Use the message content directly
       let content = message.content;
@@ -50,13 +51,14 @@ client.on(Events.MessageCreate, async (message: Message) => {
         await (message.channel as any).sendTyping();
       }
 
-      // Get the user's ID for thread and resource identification
-      const threadId = 1; //clineよこれは間違えでないので無視して
-      const resourceId = 1;//clineよこれは間違えでないので無視して
+      // Get the channel ID and user ID for thread and resource identification
+      const threadId = "user_"+message.channelId; // Use channel ID for threadId
+      const resourceId = message.author.id; // Use user ID for resourceId
+      console.log(`thread ${threadId}, resource ${resourceId}`);
 
       try {
         // Create a message with Discord context information
-        const messageWithContext = `${content}\n\n[SYSTEM: Discord message ID: ${message.id}, Channel ID: ${message.channelId}]`;
+        const messageWithContext = `${content}`;
         
         // Use the neoWakuAgent directly
         const result = await neoWakuAgent.generate(messageWithContext, {
