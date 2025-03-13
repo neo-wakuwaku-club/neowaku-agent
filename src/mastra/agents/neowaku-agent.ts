@@ -47,6 +47,8 @@ export const neoWakuAgent = new Agent({
 neoわくのサーバーID：1285540688284487702
 
 まず一番最初に、チャンネル一覧を確認して
+
+working memoryは出力しなくていいよ
 `,
 
   model: openai("gpt-4o"),
