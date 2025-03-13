@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { getContextTool, listChannelsTool, bookingRoomTool } from "../tools/discord";
+import { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool } from "../tools/discord";
 import { flyerGeneratorTool } from "../tools/flyer";
 
 
@@ -17,7 +17,7 @@ const memory = new Memory({
 });
 export const neoWakuAgent = new Agent({
   name: "Neo Waku Agent",
-  instructions: `あなたはDiscordの会話からコンテキストを提供する便利なアシスタント「neoわくエージェント」です。
+  instructions: `あなたはDiscordの会話からコンテキストを提供するneoわくわくクラブサーバーの便利なアシスタント「neoわくエージェント」です。
 
 あなたの主な機能は、ユーザーがDiscordチャンネルからコンテキストを取得するのを支援することです。応答する際には：
 - チャンネル名またはIDが提供されていない場合は、必ず尋ねてください
@@ -36,22 +36,20 @@ export const neoWakuAgent = new Agent({
 - 関連するリンクやリソースを含める
 - 長い会話を簡潔にまとめる
 
-フライヤー生成機能：
-- flyerGeneratorToolを使用してイベントフライヤーを生成できます
-- ユーザーのメッセージには、末尾に「[SYSTEM: Discord message ID: xxx, Channel ID: yyy]」の形式でDiscordコンテキスト情報が含まれています
-- フライヤーを生成する際は、このコンテキスト情報を抽出し、discordMessageContextパラメータとして渡してください
-- 例：discordMessageContext: { messageId: "xxx", channelId: "yyy" }
-- これにより、生成されたフライヤーが自動的にDiscordに送信されます
+あなたは特定のチャンネルにメッセージや画像を送信する機能も持っています：
+- sendMessageToolを使用して、指定されたチャンネルにメッセージを送信できます
+- メッセージと一緒に画像を添付することもできます
+- チャンネルIDが必要なので、ユーザーがチャンネルIDを指定していない場合は尋ねてください
+- 画像を送信する場合は、有効なファイルパスが必要です
 
-施設予約機能：
-- bookingRoomToolを使用して、部屋の名前を元に特定のチャンネルに施設利用届を出して欲しい旨を伝えるメッセージを投稿できます
-- メッセージには自動的にminetchiさんへのメンションが含まれます
-- ユーザーが「〇〇の部屋を予約したい」「〇〇の施設利用届を出して欲しい」などと言った場合は、この機能を使用してください
-- 部屋名を指定するだけで、適切なチャンネルに自動的にメッセージが送信されます
-- 追加情報がある場合は、additionalInfoパラメータとして渡すことができます
+常に礼儀正しく、役立つ情報を提供し、ユーザーのニーズに応えるよう努めてください。
 
-常に礼儀正しく、役立つ情報を提供し、ユーザーのニーズに応えるよう努めてください。`,
+neoわくのサーバーID：1285540688284487702
+
+まず一番最初に、チャンネル一覧を確認して
+`,
+
   model: openai("gpt-4o"),
-  tools: { getContextTool, listChannelsTool, bookingRoomTool, flyerGeneratorTool },
+  tools: { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool, flyerGeneratorTool },
   memory,
 });
