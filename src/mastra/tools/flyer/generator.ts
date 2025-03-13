@@ -260,7 +260,7 @@ async function combineBackgroundAndSvg(backgroundPath: string, svgPath: string):
       .toFile(outputFilename);
     
     console.log(`\n合成画像が生成されました: ${outputFilename}`);
-    console.log(`ファイルパス: ${path.resolve(outputFilename)}`);
+    console.log(`ファイルパス: ${path.relative(process.cwd(), outputFilename)}`);
     return outputFilename;
   } catch (error) {
     console.error("画像合成中にエラーが発生しました:", error);
@@ -284,14 +284,14 @@ async function generateFlyer(eventDetails: string, designInstructions: string = 
     const backgroundBuffer = await generateBackgroundImage(eventDetails, designInstructions);
     const backgroundPath = saveBackgroundImage(backgroundBuffer);
     console.log(`背景画像が生成されました: ${backgroundPath}`);
-    console.log(`ファイルパス: ${path.resolve(backgroundPath)}`);
+    console.log(`ファイルパス: ${path.relative(process.cwd(), backgroundPath)}`);
     
     // Generate SVG text overlay with Claude
     console.log("\nClaudeを使用してSVGテキストオーバーレイを生成中...\n");
     const svgContent = await generateSvgTextOverlay(eventDetails, designInstructions);
     const svgPath = saveSvgFile(svgContent);
     console.log(`SVGテキストオーバーレイが生成されました: ${svgPath}`);
-    console.log(`ファイルパス: ${path.resolve(svgPath)}`);
+    console.log(`ファイルパス: ${path.relative(process.cwd(), svgPath)}`);
     
     // Combine background and SVG overlay
     console.log("\n背景画像とSVGテキストを合成中...\n");
@@ -299,20 +299,20 @@ async function generateFlyer(eventDetails: string, designInstructions: string = 
     
     // Display generated files
     console.log("\n生成されたファイル:");
-    const absoluteBackgroundPath = path.resolve(backgroundPath);
-    const absoluteSvgPath = path.resolve(svgPath);
-    const absoluteCombinedPath = combinedPath ? path.resolve(combinedPath) : null;
+    const relativeBackgroundPath = path.relative(process.cwd(), backgroundPath);
+    const relativeSvgPath = path.relative(process.cwd(), svgPath);
+    const relativeCombinedPath = combinedPath ? path.relative(process.cwd(), combinedPath) : null;
     
-    console.log(`1. 背景画像: ${absoluteBackgroundPath}`);
-    console.log(`2. SVGテキストオーバーレイ: ${absoluteSvgPath}`);
-    if (absoluteCombinedPath) {
-      console.log(`3. 合成フライヤー: ${absoluteCombinedPath}`);
+    console.log(`1. 背景画像: ${relativeBackgroundPath}`);
+    console.log(`2. SVGテキストオーバーレイ: ${relativeSvgPath}`);
+    if (relativeCombinedPath) {
+      console.log(`3. 合成フライヤー: ${relativeCombinedPath}`);
     }
     
     return {
-      backgroundPath: absoluteBackgroundPath,
-      svgPath: absoluteSvgPath,
-      combinedPath: absoluteCombinedPath
+      backgroundPath: relativeBackgroundPath,
+      svgPath: relativeSvgPath,
+      combinedPath: relativeCombinedPath
     };
   } catch (error) {
     console.error("エラーが発生しました:", error);
