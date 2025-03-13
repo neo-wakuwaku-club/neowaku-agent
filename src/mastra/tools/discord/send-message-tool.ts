@@ -75,24 +75,37 @@ const sendMessage = async (channelId: string, message: string, imagePath?: strin
     let sentMessage;
     let imageAttached = false;
 
-    // Check if an image path was provided and if the file exists
-    if (imagePath) {
+    // Check if the message contains an image path in the format [IMAGE_PATH:/path/to/image]
+    const imagePathMatch = message.match(/\[IMAGE_PATH:(.*?)\]/);
+    let messageText = message;
+    let imagePathFromText: string | undefined;
+    
+    if (imagePathMatch && imagePathMatch[1]) {
+      // Extract the image path and clean the message text
+      imagePathFromText = imagePathMatch[1].trim();
+      messageText = message.replace(/\[IMAGE_PATH:.*?\]/, '').trim();
+    }
+    
+    // Use either the explicitly provided imagePath or the one extracted from the message
+    const finalImagePath = imagePath || imagePathFromText;
+    
+    if (finalImagePath) {
       try {
         console.log(`Attempting to access image at path: ${imagePath}`);
         
         // Check if the file exists and is readable
-        await fs.promises.access(imagePath, fs.constants.R_OK);
+        await fs.promises.access(finalImagePath, fs.constants.R_OK);
         
         console.log(`Image file exists and is readable`);
         
         // Create an attachment from the file
-        const attachment = new AttachmentBuilder(imagePath, {
-          name: path.basename(imagePath)
+        const attachment = new AttachmentBuilder(finalImagePath, {
+          name: path.basename(finalImagePath)
         });
         
         // Send the message with the attachment
         sentMessage = await channel.send({
-          content: message,
+          content: messageText,
           files: [attachment]
         });
         
@@ -100,11 +113,11 @@ const sendMessage = async (channelId: string, message: string, imagePath?: strin
       } catch (error) {
         // If there's an error with the image, just send the text message
         console.error(`Error attaching image: ${error instanceof Error ? error.message : String(error)}`);
-        sentMessage = await channel.send(message);
+        sentMessage = await channel.send(messageText);
       }
     } else {
       // Send just the text message
-      sentMessage = await channel.send(message);
+      sentMessage = await channel.send(messageText);
     }
     
     // Format the response

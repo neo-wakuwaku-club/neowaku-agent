@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Message } from "discord.js";
+import { Client, Events, GatewayIntentBits, Message, AttachmentBuilder } from "discord.js";
 import dotenv from "dotenv";
 import { mastra } from "./index";
 import { neoWakuAgent } from "./agents/neowaku-agent";
@@ -66,8 +66,33 @@ client.on(Events.MessageCreate, async (message: Message) => {
           resourceId
         });
         
-        // Send the response back to the channel
-        await message.reply(result.text);
+        // Check if the response contains an image path
+        const responseText = result.text;
+        const imagePathMatch = responseText.match(/\[IMAGE_PATH:(.*?)\]/);
+        
+        if (imagePathMatch && imagePathMatch[1]) {
+          // Extract the image path and clean the response text
+          const imagePath = imagePathMatch[1].trim();
+          const cleanedText = responseText.replace(/\[IMAGE_PATH:.*?\]/, '').trim();
+          
+          try {
+            // Create an attachment from the file
+            const attachment = new AttachmentBuilder(imagePath);
+            
+            // Send the response with the image attachment
+            await message.reply({
+              content: cleanedText,
+              files: [attachment]
+            });
+          } catch (error) {
+            console.error("Error attaching image:", error);
+            // If there's an error with the image, just send the text
+            await message.reply(cleanedText);
+          }
+        } else {
+          // Send just the text response
+          await message.reply(responseText);
+        }
       } catch (error) {
         console.error("Neo Waku agent processing error:", error);
         await message.reply("処理中にエラーが発生しました。");
