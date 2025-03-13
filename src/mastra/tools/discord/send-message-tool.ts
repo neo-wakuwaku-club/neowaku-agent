@@ -78,8 +78,12 @@ const sendMessage = async (channelId: string, message: string, imagePath?: strin
     // Check if an image path was provided and if the file exists
     if (imagePath) {
       try {
+        console.log(`Attempting to access image at path: ${imagePath}`);
+        
         // Check if the file exists and is readable
         await fs.promises.access(imagePath, fs.constants.R_OK);
+        
+        console.log(`Image file exists and is readable`);
         
         // Create an attachment from the file
         const attachment = new AttachmentBuilder(imagePath, {

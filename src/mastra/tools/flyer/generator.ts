@@ -7,6 +7,7 @@ import { OpenAI } from 'openai';
 import { exec } from 'child_process';
 import sharp from 'sharp';
 import 'dotenv/config';
+import crypto from 'crypto';
 
 // Define types
 interface EventDetails {
@@ -161,6 +162,14 @@ async function generateSvgTextOverlay(eventDetails: string, designInstructions: 
 }
 
 /**
+ * Generate a random string for file naming
+ * @returns Random string
+ */
+function generateRandomString(length: number = 10): string {
+  return crypto.randomBytes(length).toString('hex');
+}
+
+/**
  * Save background image to a file
  * @param imageBuffer - Image buffer to save
  * @returns Path to the saved file
@@ -172,9 +181,9 @@ function saveBackgroundImage(imageBuffer: Buffer): string {
     fs.mkdirSync(outputDir, { recursive: true });
   }
   
-  // Generate filename with timestamp
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "").replace("T", "_").slice(0, 15);
-  const filename = path.join(outputDir, `background_${timestamp}.png`);
+  // Generate filename with random string
+  const randomId = generateRandomString();
+  const filename = path.join(outputDir, `background_${randomId}.png`);
   
   // Write image buffer to file
   fs.writeFileSync(filename, imageBuffer);
@@ -194,9 +203,9 @@ function saveSvgFile(svgContent: string): string {
     fs.mkdirSync(outputDir, { recursive: true });
   }
   
-  // Generate filename with timestamp
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "").replace("T", "_").slice(0, 15);
-  const filename = path.join(outputDir, `overlay_${timestamp}.svg`);
+  // Generate filename with random string
+  const randomId = generateRandomString();
+  const filename = path.join(outputDir, `overlay_${randomId}.svg`);
   
   // Add XML declaration if not present
   if (!svgContent.startsWith('<?xml')) {
@@ -230,9 +239,9 @@ async function combineBackgroundAndSvg(backgroundPath: string, svgPath: string):
     fs.mkdirSync(outputDir, { recursive: true });
   }
   
-  // Generate output filename
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "").replace("T", "_").slice(0, 15);
-  const outputFilename = path.join(outputDir, `flyer_${timestamp}_combined.png`);
+  // Generate output filename with random string
+  const randomId = generateRandomString();
+  const outputFilename = path.join(outputDir, `flyer_${randomId}_combined.png`);
   
   try {
     // Get background image dimensions
@@ -320,73 +329,17 @@ async function generateFlyer(eventDetails: string, designInstructions: string = 
   }
 }
 
-/**
- * Send image to Discord
- * @param imagePath - Path to the image to send
- * @param messageContext - Discord message context
- * @returns Whether the image was sent successfully
- */
-async function sendImageToDiscord(imagePath: string, messageContext: any): Promise<boolean> {
-  try {
-    // Import discord.js types and client
-    const { discordClient } = await import('../../discord');
-    const { ChannelType } = await import('discord.js');
-    
-    // Get the channel
-    const channel = await discordClient.channels.fetch(messageContext.channelId);
-    
-    if (!channel) {
-      console.error("Discord画像送信失敗: チャンネルが見つかりません");
-      return false;
-    }
-    
-    // Check if it's a text channel
-    if (channel.type === ChannelType.GuildText || 
-        channel.type === ChannelType.DM || 
-        channel.type === ChannelType.PublicThread || 
-        channel.type === ChannelType.PrivateThread) {
-      
-      // Use the appropriate method based on channel type
-      // @ts-ignore - We've already checked the channel type
-      await channel.send({
-        files: [{
-          attachment: imagePath,
-          name: path.basename(imagePath)
-        }]
-      });
-      
-      console.log(`Discord画像送信成功: ${imagePath}`);
-      return true;
-    }
-    
-    console.error(`Discord画像送信失敗: サポートされていないチャンネルタイプ: ${channel.type}`);
-    return false;
-  } catch (error) {
-    console.error("Discord画像送信中にエラーが発生しました:", error);
-    if (error instanceof Error) {
-      console.error(error.message);
-    }
-    return false;
-  }
-}
 
 // Create the flyer generator tool
 export const flyerGeneratorTool = createTool({
   id: "generate-flyer",
-  description: "Generate a flyer with DALL-E background image and SVG text overlay",
+  description: "Generate a flyer with DALL-E background image and SVG text overlay、ただファイルのパスを返すので必要そうならユーザーに送信してください",
   inputSchema: z.object({
     eventDetails: z.string().describe("Event details to include in the flyer"),
     designInstructions: z.string().optional().describe("Additional design instructions or preferences for the flyer"),
-    discordMessageContext: z.object({
-      messageId: z.string(),
-      channelId: z.string()
-    }).optional().describe("Discord message context for sending the flyer back"),
   }),
   outputSchema: z.object({
-    backgroundPath: z.string(),
-    svgPath: z.string(),
     combinedPath: z.string().nullable(),
-    sentToDiscord: z.boolean().optional(),
   }),
   execute: async ({ context }) => {
     const result = await generateFlyer(
@@ -394,19 +347,9 @@ export const flyerGeneratorTool = createTool({
       context.designInstructions || ""
     );
     
-    let sentToDiscord = false;
-    
-    // Send to Discord if context is provided and combined image exists
-    if (context.discordMessageContext && result.combinedPath) {
-      console.log(`Sending flyer to Discord channel: ${context.discordMessageContext.channelId}`);
-      sentToDiscord = await sendImageToDiscord(result.combinedPath, context.discordMessageContext);
-    } else {
-      console.log(`No Discord message context provided or no combined image path`);
-    }
-    
+    // Only return the combined path
     return {
-      ...result,
-      sentToDiscord
+      combinedPath: result.combinedPath
     };
   },
 });
