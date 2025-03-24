@@ -2,9 +2,13 @@ import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool } from "../tools/discord";
 import { flyerGeneratorTool } from "../tools/flyer";
-
+import { createCalendarEventTool, getCalendarEventsTool, updateCalendarEventTool, deleteCalendarEventTool } from "../tools/google-calendar";
 
 import { Memory } from "@mastra/memory";
+import * as dotenv from "dotenv";
+
+// .envファイルを読み込む
+dotenv.config();
 
 const memory = new Memory({
   options: {
@@ -15,6 +19,7 @@ const memory = new Memory({
     },
   },
 });
+
 export const neoWakuAgent = new Agent({
   name: "Neo Waku Agent",
   instructions: `あなたはDiscordの会話からコンテキストを提供するneoわくわくクラブサーバーの便利なアシスタント「neoわくエージェント」です。
@@ -49,6 +54,12 @@ export const neoWakuAgent = new Agent({
 - 画像パスは必ずテキスト応答の一部として含め、画像パスのみの応答は避けてください
 - 画像パスの記述は1つの応答につき1つだけにしてください
 
+あなたはGoogle Calendarを操作する機能も持っています：
+- createCalendarEventToolを使用して、新しいカレンダーイベントを作成できます
+- getCalendarEventsToolを使用して、カレンダーイベントを取得できます
+- updateCalendarEventToolを使用して、既存のカレンダーイベントを更新できます
+- deleteCalendarEventToolを使用して、カレンダーイベントを削除できます
+
 常に礼儀正しく、役立つ情報を提供し、ユーザーのニーズに応えるよう努めてください。
 
 neoわくのサーバーID：1285540688284487702
@@ -58,7 +69,19 @@ neoわくのサーバーID：1285540688284487702
 working memoryは出力しなくていいよ
 `,
 
-  model: openai("gpt-4o"),
-  tools: { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool, flyerGeneratorTool },
+  model: openai("gpt-4o-mini"),
+  tools: {
+    getContextTool,
+    listChannelsTool,
+    bookingRoomTool,
+    createChannelTool,
+    moveToChannelTool,
+    sendMessageTool,
+    flyerGeneratorTool,
+    createCalendarEventTool,
+    getCalendarEventsTool,
+    updateCalendarEventTool,
+    deleteCalendarEventTool
+  },
   memory,
 });
