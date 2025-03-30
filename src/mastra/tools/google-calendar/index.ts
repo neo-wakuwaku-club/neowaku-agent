@@ -45,6 +45,7 @@ export const createCalendarEventTool = createTool({
     endDateTime: z.string().describe("End date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     attendees: z.array(z.string()).optional().describe("List of email addresses of attendees"),
     isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
+    visibility: z.enum(['default', 'public', 'private']).optional().describe("Visibility of the event: default, public, or private"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -60,6 +61,11 @@ export const createCalendarEventTool = createTool({
         description: context.description,
         location: context.location,
       };
+
+      // Set visibility if provided
+      if (context.visibility) {
+        event.visibility = context.visibility;
+      }
 
       // Handle all-day events differently than timed events
       if (context.isAllDay) {
@@ -204,6 +210,7 @@ export const updateCalendarEventTool = createTool({
     endDateTime: z.string().optional().describe("New end date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     attendees: z.array(z.string()).optional().describe("New list of email addresses of attendees"),
     isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
+    visibility: z.enum(['default', 'public', 'private']).optional().describe("Visibility of the event: default, public, or private"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -232,6 +239,7 @@ export const updateCalendarEventTool = createTool({
       if (context.summary !== undefined) updatedEvent.summary = context.summary;
       if (context.description !== undefined) updatedEvent.description = context.description;
       if (context.location !== undefined) updatedEvent.location = context.location;
+      if (context.visibility !== undefined) updatedEvent.visibility = context.visibility;
       
       // Handle date/time updates
       if (context.startDateTime !== undefined || context.endDateTime !== undefined || context.isAllDay !== undefined) {
@@ -258,6 +266,8 @@ export const updateCalendarEventTool = createTool({
             endDate = endDateObj.toISOString().split('T')[0];
           }
           
+          // Make sure to create completely new objects for start and end
+          // to avoid mixing date and dateTime properties
           updatedEvent.start = {
             date: startDate,
             timeZone: 'Asia/Tokyo',
@@ -266,30 +276,24 @@ export const updateCalendarEventTool = createTool({
             date: endDate,
             timeZone: 'Asia/Tokyo',
           };
-          
-          // Remove dateTime properties if they exist
-          delete updatedEvent.start.dateTime;
-          delete updatedEvent.end.dateTime;
         } else {
-          // Regular timed event
-          if (context.startDateTime !== undefined) {
+          // Regular timed event - make sure both start and end are dateTime format
+          const startDateTime = context.startDateTime || existingEvent.start?.dateTime;
+          const endDateTime = context.endDateTime || existingEvent.end?.dateTime;
+          
+          // Create completely new objects to avoid mixing date and dateTime properties
+          if (startDateTime) {
             updatedEvent.start = {
-              ...(updatedEvent.start || {}),
-              dateTime: context.startDateTime,
+              dateTime: startDateTime,
               timeZone: 'Asia/Tokyo'
             };
-            // Remove date property if it exists
-            delete updatedEvent.start.date;
           }
           
-          if (context.endDateTime !== undefined) {
+          if (endDateTime) {
             updatedEvent.end = {
-              ...(updatedEvent.end || {}),
-              dateTime: context.endDateTime,
+              dateTime: endDateTime,
               timeZone: 'Asia/Tokyo'
             };
-            // Remove date property if it exists
-            delete updatedEvent.end.date;
           }
         }
       }
