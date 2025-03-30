@@ -69,7 +69,7 @@ neoわくのサーバーID：1285540688284487702
 working memoryは出力しなくていいよ
 `,
 
-  model: openai("gpt-4o-mini"),
+  model: openai("gpt-4o"),
   tools: {
     getContextTool,
     listChannelsTool,
