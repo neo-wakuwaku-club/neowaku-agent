@@ -44,6 +44,7 @@ export const createCalendarEventTool = createTool({
     startDateTime: z.string().describe("Start date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     endDateTime: z.string().describe("End date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     attendees: z.array(z.string()).optional().describe("List of email addresses of attendees"),
+    isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -58,15 +59,40 @@ export const createCalendarEventTool = createTool({
         summary: context.summary,
         description: context.description,
         location: context.location,
-        start: {
+      };
+
+      // Handle all-day events differently than timed events
+      if (context.isAllDay) {
+        // For all-day events, use date instead of dateTime
+        // Convert ISO string to YYYY-MM-DD format for all-day events
+        const startDate = context.startDateTime.split('T')[0];
+        let endDate = context.endDateTime.split('T')[0];
+        
+        // For all-day events, Google Calendar expects the end date to be the next day
+        // This is because the end date is exclusive in all-day events
+        const endDateObj = new Date(endDate);
+        endDateObj.setDate(endDateObj.getDate() + 1);
+        endDate = endDateObj.toISOString().split('T')[0];
+        
+        event.start = {
+          date: startDate,
+          timeZone: 'Asia/Tokyo',
+        };
+        event.end = {
+          date: endDate,
+          timeZone: 'Asia/Tokyo',
+        };
+      } else {
+        // Regular timed event
+        event.start = {
           dateTime: context.startDateTime,
           timeZone: 'Asia/Tokyo',
-        },
-        end: {
+        };
+        event.end = {
           dateTime: context.endDateTime,
           timeZone: 'Asia/Tokyo',
-        },
-      };
+        };
+      }
 
       // Add attendees if provided
       if (context.attendees && context.attendees.length > 0) {
@@ -177,6 +203,7 @@ export const updateCalendarEventTool = createTool({
     startDateTime: z.string().optional().describe("New start date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     endDateTime: z.string().optional().describe("New end date and time of the event in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     attendees: z.array(z.string()).optional().describe("New list of email addresses of attendees"),
+    isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -195,25 +222,76 @@ export const updateCalendarEventTool = createTool({
       
       const existingEvent = getResponse.data;
       
-      // Prepare update with only the fields that are provided
-      const updatedEvent: calendar_v3.Schema$Event = {};
+      // Create a copy of the existing event to update
+      // This ensures we don't lose any fields when updating
+      const updatedEvent: calendar_v3.Schema$Event = {
+        ...existingEvent
+      };
       
+      // Update only the fields that are provided
       if (context.summary !== undefined) updatedEvent.summary = context.summary;
       if (context.description !== undefined) updatedEvent.description = context.description;
       if (context.location !== undefined) updatedEvent.location = context.location;
       
-      if (context.startDateTime !== undefined) {
-        updatedEvent.start = {
-          dateTime: context.startDateTime,
-          timeZone: 'Asia/Tokyo'
-        };
-      }
-      
-      if (context.endDateTime !== undefined) {
-        updatedEvent.end = {
-          dateTime: context.endDateTime,
-          timeZone: 'Asia/Tokyo'
-        };
+      // Handle date/time updates
+      if (context.startDateTime !== undefined || context.endDateTime !== undefined || context.isAllDay !== undefined) {
+        // Determine if this should be an all-day event
+        const isAllDay = context.isAllDay !== undefined ? context.isAllDay : 
+                         (existingEvent.start?.date !== undefined);
+        
+        if (isAllDay) {
+          // For all-day events, use date instead of dateTime
+          // Get the start date, either from the update or from the existing event
+          let startDate = context.startDateTime ? context.startDateTime.split('T')[0] : 
+                         (existingEvent.start?.date || existingEvent.start?.dateTime?.split('T')[0]);
+          
+          // Get the end date, either from the update or from the existing event
+          let endDate = context.endDateTime ? context.endDateTime.split('T')[0] : 
+                       (existingEvent.end?.date || existingEvent.end?.dateTime?.split('T')[0]);
+          
+          // For all-day events, Google Calendar expects the end date to be the next day
+          // This is because the end date is exclusive in all-day events
+          // Only adjust if we're converting from a timed event to an all-day event
+          if (!existingEvent.start?.date && endDate) {
+            const endDateObj = new Date(endDate);
+            endDateObj.setDate(endDateObj.getDate() + 1);
+            endDate = endDateObj.toISOString().split('T')[0];
+          }
+          
+          updatedEvent.start = {
+            date: startDate,
+            timeZone: 'Asia/Tokyo',
+          };
+          updatedEvent.end = {
+            date: endDate,
+            timeZone: 'Asia/Tokyo',
+          };
+          
+          // Remove dateTime properties if they exist
+          delete updatedEvent.start.dateTime;
+          delete updatedEvent.end.dateTime;
+        } else {
+          // Regular timed event
+          if (context.startDateTime !== undefined) {
+            updatedEvent.start = {
+              ...(updatedEvent.start || {}),
+              dateTime: context.startDateTime,
+              timeZone: 'Asia/Tokyo'
+            };
+            // Remove date property if it exists
+            delete updatedEvent.start.date;
+          }
+          
+          if (context.endDateTime !== undefined) {
+            updatedEvent.end = {
+              ...(updatedEvent.end || {}),
+              dateTime: context.endDateTime,
+              timeZone: 'Asia/Tokyo'
+            };
+            // Remove date property if it exists
+            delete updatedEvent.end.date;
+          }
+        }
       }
       
       if (context.attendees !== undefined) {
