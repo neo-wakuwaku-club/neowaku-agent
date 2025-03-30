@@ -33,6 +33,69 @@ const calendar = google.calendar({
   auth: oauth2Client as any // Type assertion to bypass type mismatch between packages
 });
 
+// Helper function to get calendar ID from name
+async function getCalendarIdFromName(calendarName: string): Promise<string | null> {
+  try {
+    const response = await calendar.calendarList.list();
+    const calendars = response.data.items || [];
+    
+    // Find calendar by name (case insensitive)
+    const matchedCalendar = calendars.find(
+      cal => cal.summary && cal.summary.toLowerCase() === calendarName.toLowerCase()
+    );
+    
+    return matchedCalendar?.id || null;
+  } catch (error) {
+    console.error('Error finding calendar by name:', error);
+    return null;
+  }
+}
+
+// Tool to list available calendars
+export const listCalendarsTool = createTool({
+  id: "listCalendars",
+  description: "List all available Google Calendars",
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    success: z.boolean(),
+    calendars: z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
+        primary: z.boolean().optional(),
+        accessRole: z.string().optional(),
+      })
+    ).optional(),
+    error: z.string().optional(),
+  }),
+  execute: async ({ context }) => {
+    try {
+      const response = await calendar.calendarList.list();
+      const calendars = response.data.items || [];
+      
+      const formattedCalendars = calendars.map(cal => ({
+        id: cal.id || '',
+        name: cal.summary || '',
+        description: cal.description || undefined,
+        primary: cal.primary || undefined,
+        accessRole: cal.accessRole || undefined,
+      }));
+      
+      return {
+        success: true,
+        calendars: formattedCalendars,
+      };
+    } catch (error: any) {
+      console.error('Error listing calendars:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to list calendars'
+      };
+    }
+  }
+});
+
 // Tool to create a calendar event
 export const createCalendarEventTool = createTool({
   id: "createCalendarEvent",
@@ -46,16 +109,31 @@ export const createCalendarEventTool = createTool({
     attendees: z.array(z.string()).optional().describe("List of email addresses of attendees"),
     isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
     visibility: z.enum(['default', 'public', 'private']).optional().describe("Visibility of the event: default, public, or private"),
+    addGoogleMeet: z.boolean().optional().describe("Whether to add Google Meet conferencing to the event"),
+    calendarId: z.string().optional().describe("ID of the calendar to create the event in. Defaults to 'primary'"),
+    calendarName: z.string().optional().describe("Name of the calendar to create the event in. If provided, this will be used to find the calendar ID"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     eventId: z.string().optional(),
     eventLink: z.string().optional(),
+    meetLink: z.string().optional(),
     message: z.string().optional(),
     error: z.string().optional(),
   }),
   execute: async ({ context }) => {
     try {
+      // Resolve calendar ID from name if provided
+      let targetCalendarId = context.calendarId || 'primary';
+      if (context.calendarName) {
+        const resolvedId = await getCalendarIdFromName(context.calendarName);
+        if (resolvedId) {
+          targetCalendarId = resolvedId;
+        } else {
+          console.warn(`Calendar with name "${context.calendarName}" not found, using ${targetCalendarId} instead.`);
+        }
+      }
+
       const event: calendar_v3.Schema$Event = {
         summary: context.summary,
         description: context.description,
@@ -65,6 +143,18 @@ export const createCalendarEventTool = createTool({
       // Set visibility if provided
       if (context.visibility) {
         event.visibility = context.visibility;
+      }
+
+      // Add Google Meet conferencing if requested
+      if (context.addGoogleMeet) {
+        event.conferenceData = {
+          createRequest: {
+            requestId: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+            conferenceSolutionKey: {
+              type: 'hangoutsMeet'
+            }
+          }
+        };
       }
 
       // Handle all-day events differently than timed events
@@ -106,14 +196,16 @@ export const createCalendarEventTool = createTool({
       }
 
       const response = await calendar.events.insert({
-        calendarId: 'primary',
+        calendarId: targetCalendarId,
         requestBody: event,
+        conferenceDataVersion: context.addGoogleMeet ? 1 : 0,
       });
 
       return {
         success: true,
         eventId: response.data.id || undefined,
         eventLink: response.data.htmlLink || undefined,
+        meetLink: response.data.conferenceData?.entryPoints?.[0]?.uri || undefined,
         message: 'Event created successfully'
       };
     } catch (error: any) {
@@ -134,6 +226,8 @@ export const getCalendarEventsTool = createTool({
     timeMin: z.string().describe("Start time to get events from in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     timeMax: z.string().optional().describe("End time to get events until in ISO format (YYYY-MM-DDTHH:MM:SS+09:00)"),
     maxResults: z.number().optional().describe("Maximum number of events to return"),
+    calendarId: z.string().optional().describe("ID of the calendar to get events from. Defaults to 'primary'"),
+    calendarName: z.string().optional().describe("Name of the calendar to get events from. If provided, this will be used to find the calendar ID"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -154,8 +248,19 @@ export const getCalendarEventsTool = createTool({
   }),
   execute: async ({ context }) => {
     try {
+      // Resolve calendar ID from name if provided
+      let targetCalendarId = context.calendarId || 'primary';
+      if (context.calendarName) {
+        const resolvedId = await getCalendarIdFromName(context.calendarName);
+        if (resolvedId) {
+          targetCalendarId = resolvedId;
+        } else {
+          console.warn(`Calendar with name "${context.calendarName}" not found, using ${targetCalendarId} instead.`);
+        }
+      }
+
       const response = await calendar.events.list({
-        calendarId: 'primary',
+        calendarId: targetCalendarId,
         timeMin: context.timeMin,
         timeMax: context.timeMax,
         maxResults: context.maxResults || 10,
@@ -211,6 +316,8 @@ export const updateCalendarEventTool = createTool({
     attendees: z.array(z.string()).optional().describe("New list of email addresses of attendees"),
     isAllDay: z.boolean().optional().describe("Whether the event is an all-day event"),
     visibility: z.enum(['default', 'public', 'private']).optional().describe("Visibility of the event: default, public, or private"),
+    calendarId: z.string().optional().describe("ID of the calendar containing the event. Defaults to 'primary'"),
+    calendarName: z.string().optional().describe("Name of the calendar containing the event. If provided, this will be used to find the calendar ID"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -221,9 +328,20 @@ export const updateCalendarEventTool = createTool({
   }),
   execute: async ({ context }) => {
     try {
+      // Resolve calendar ID from name if provided
+      let targetCalendarId = context.calendarId || 'primary';
+      if (context.calendarName) {
+        const resolvedId = await getCalendarIdFromName(context.calendarName);
+        if (resolvedId) {
+          targetCalendarId = resolvedId;
+        } else {
+          console.warn(`Calendar with name "${context.calendarName}" not found, using ${targetCalendarId} instead.`);
+        }
+      }
+
       // First get the existing event
       const getResponse = await calendar.events.get({
-        calendarId: 'primary',
+        calendarId: targetCalendarId,
         eventId: context.eventId
       });
       
@@ -304,7 +422,7 @@ export const updateCalendarEventTool = createTool({
       
       // Update the event
       const updateResponse = await calendar.events.update({
-        calendarId: 'primary',
+        calendarId: targetCalendarId,
         eventId: context.eventId,
         requestBody: updatedEvent
       });
@@ -328,9 +446,11 @@ export const updateCalendarEventTool = createTool({
 // Tool to delete a calendar event
 export const deleteCalendarEventTool = createTool({
   id: "deleteCalendarEvent",
-  description: "Delete a calendar event by its ID",
+  description: "Delete an event from Google Calendar",
   inputSchema: z.object({
-    eventId: z.string().describe("The ID of the event to delete"),
+    eventId: z.string().describe("ID of the event to delete"),
+    calendarId: z.string().optional().describe("ID of the calendar containing the event. Defaults to 'primary'"),
+    calendarName: z.string().optional().describe("Name of the calendar containing the event. If provided, this will be used to find the calendar ID"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -339,8 +459,19 @@ export const deleteCalendarEventTool = createTool({
   }),
   execute: async ({ context }) => {
     try {
+      // Resolve calendar ID from name if provided
+      let targetCalendarId = context.calendarId || 'primary';
+      if (context.calendarName) {
+        const resolvedId = await getCalendarIdFromName(context.calendarName);
+        if (resolvedId) {
+          targetCalendarId = resolvedId;
+        } else {
+          console.warn(`Calendar with name "${context.calendarName}" not found, using ${targetCalendarId} instead.`);
+        }
+      }
+
       await calendar.events.delete({
-        calendarId: 'primary',
+        calendarId: targetCalendarId,
         eventId: context.eventId
       });
 
