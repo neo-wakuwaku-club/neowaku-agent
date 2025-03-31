@@ -4,6 +4,7 @@ import { bookingRoomTool } from "./booking-room";
 import { createChannelTool } from "./create-channel-tool";
 import { moveToChannelTool } from "./move-to-channel-tool";
 import { sendMessageTool } from "./send-message-tool";
+import { addReactionTool } from "./add-reaction-tool";
 
 export const discordTools = {
   getContextTool,
@@ -12,6 +13,7 @@ export const discordTools = {
   createChannelTool,
   moveToChannelTool,
   sendMessageTool,
+  addReactionTool,
 };
 
 export { 
@@ -20,5 +22,6 @@ export {
   bookingRoomTool,
   createChannelTool,
   moveToChannelTool,
-  sendMessageTool
+  sendMessageTool,
+  addReactionTool
 };

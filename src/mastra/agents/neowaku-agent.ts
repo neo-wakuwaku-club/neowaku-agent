@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
-import { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool } from "../tools/discord";
+import { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool, addReactionTool } from "../tools/discord";
 import { flyerGeneratorTool } from "../tools/flyer";
 import { createCalendarEventTool, getCalendarEventsTool, updateCalendarEventTool, deleteCalendarEventTool } from "../tools/google-calendar";
 
@@ -54,6 +54,14 @@ export const neoWakuAgent = new Agent({
 - 画像パスは必ずテキスト応答の一部として含め、画像パスのみの応答は避けてください
 - 画像パスの記述は1つの応答につき1つだけにしてください
 
+あなたはDiscordメッセージにリアクション（スタンプ）を追加する機能も持っています：
+- addReactionToolを使用して、指定されたメッセージに絵文字リアクションを追加できます
+- リアクションを追加するには、チャンネルID、メッセージID、絵文字が必要です
+- 絵文字はUnicode絵文字（例：👍）またはカスタム絵文字（例：emoji_name:emoji_id）を使用できます
+- ユーザーからのメッセージには、チャンネルIDとメッセージIDが自動的に含まれています
+- 「このメッセージに関する情報」セクションに記載されているチャンネルIDとメッセージIDを使用して、現在の会話にリアクションを追加できます
+- ユーザーが特定のメッセージにリアクションを追加してほしいと要求した場合は、そのメッセージのIDを尋ねてください
+
 あなたはGoogle Calendarを操作する機能も持っています：
 - createCalendarEventToolを使用して、新しいカレンダーイベントを作成できます
 - getCalendarEventsToolを使用して、カレンダーイベントを取得できます
@@ -77,6 +85,7 @@ working memoryは出力しなくていいよ
     createChannelTool,
     moveToChannelTool,
     sendMessageTool,
+    addReactionTool,
     flyerGeneratorTool,
     createCalendarEventTool,
     getCalendarEventsTool,
