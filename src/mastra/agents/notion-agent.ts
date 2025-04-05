@@ -1,14 +1,17 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { MCPConfiguration } from "@mastra/mcp";
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const mcp = new MCPConfiguration({
   servers: {
     notion: {
       command: "node",
-      args: ["/Users/fukayatti0/mcp-notion-server/notion/build/index.js"],
+      args: ["/Users/USENAME/mcp-notion-server/notion/build/index.js"],
       env: {
-        NOTION_API_TOKEN: "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",
+        NOTION_API_TOKEN: process.env.NOTION_API_TOKEN,
       },
     },
     // ここに他のMCPサーバー設定を追加可能（例：Notion）
