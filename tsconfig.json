@@ -11,11 +11,8 @@
   },
   "include": [
     "src/**/*",
-    "./src/mastra/tools/token.json"
+    "./src/mastra/tools/token.json",
+    "src/mastra/agents/notion-agent.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".mastra"
-  ]
+  "exclude": ["node_modules", "dist", ".mastra"]
 }

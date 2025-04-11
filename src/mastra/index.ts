@@ -5,7 +5,13 @@ import { neoWakuAgent } from "./agents/neowaku-agent";
 import { NotionAgent } from "./agents/notion-agent";
 
 import { flyerAgent } from "./agents/flyer";
- 
+
 export const mastra = new Mastra({
-  agents: { weatherAgent, flyerAgent, discordContextAgent, neoWakuAgent, NotionAgent },
+  agents: {
+    weatherAgent,
+    flyerAgent,
+    discordContextAgent,
+    neoWakuAgent,
+    NotionAgent,
+  },
 });
