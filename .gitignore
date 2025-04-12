@@ -6,3 +6,7 @@ dist
 .env
 *.db
 output
+pnpm-local.yaml
+package-lock.json
+memory.db-wal
+memory.db-shm

@@ -16,7 +16,7 @@
     "@google-cloud/local-auth": "^2.1.0",
     "@mastra/core": "^0.8.2",
     "@mastra/mcp": "0.3.9",
-    "@mastra/memory": "^0.1.7",
+    "@mastra/memory": "^0.2.9",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/sharp": "^0.31.1",

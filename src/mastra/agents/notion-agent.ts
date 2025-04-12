@@ -2,7 +2,7 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
-import { mcpConfiguration } from "./mcpConfig";
+import { mcpConfiguration } from "../tools/mcp/mcpConfig";
 
 // Memory の初期化（任意の設定に合わせて調整）
 const memory = new Memory({

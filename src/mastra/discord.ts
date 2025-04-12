@@ -1,4 +1,10 @@
-import { Client, Events, GatewayIntentBits, Message, AttachmentBuilder } from "discord.js";
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  Message,
+  AttachmentBuilder,
+} from "discord.js";
 import dotenv from "dotenv";
 import { mastra } from "./index";
 import { neoWakuAgent } from "./agents/neowaku-agent";
@@ -31,13 +37,18 @@ client.on(Events.MessageCreate, async (message: Message) => {
   if (message.author.bot) return;
 
   // Get the allowed channel IDs from environment variables (comma-separated list)
-  const allowedChannelIdsStr = process.env.ALLOWED_CHANNELS || process.env.TEST_CHANNEL || '';
-  const allowedChannelIds = allowedChannelIdsStr.split(',').map(id => id.trim()).filter(id => id);
-  
+  const allowedChannelIdsStr =
+    process.env.ALLOWED_CHANNELS || process.env.TEST_CHANNEL || "";
+  const allowedChannelIds = allowedChannelIdsStr
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id);
+
   // Check if the message is in one of the allowed channels or is a direct message
-  const isAllowedChannel = message.channel.isTextBased() && 
-                          !message.channel.isDMBased() && 
-                          allowedChannelIds.includes(message.channelId);
+  const isAllowedChannel =
+    message.channel.isTextBased() &&
+    !message.channel.isDMBased() &&
+    allowedChannelIds.includes(message.channelId);
   const isDM = message.channel.isDMBased();
   console.log(`Channel ${message.channelId} allowed: ${isAllowedChannel}`);
 
@@ -47,42 +58,44 @@ client.on(Events.MessageCreate, async (message: Message) => {
       let content = message.content;
 
       // Indicate the bot is "typing" (if the method exists on this channel type)
-      if ('sendTyping' in message.channel) {
+      if ("sendTyping" in message.channel) {
         await (message.channel as any).sendTyping();
       }
 
       // Get the channel ID and user ID for thread and resource identification
-      const threadId = "user_"+message.channelId; // Use channel ID for threadId
+      const threadId = "user_" + message.channelId; // Use channel ID for threadId
       const resourceId = message.author.id; // Use user ID for resourceId
       console.log(`thread ${threadId}, resource ${resourceId}`);
 
       try {
         // Create a message with Discord context information
         const messageWithContext = `${content}`;
-        
+
         // Use the neoWakuAgent directly
         const result = await neoWakuAgent.generate(messageWithContext, {
           threadId,
-          resourceId
+          resourceId,
         });
-        
+
         // Check if the response contains an image path
         const responseText = result.text;
         const imagePathMatch = responseText.match(/\[IMAGE_PATH:(.*?)\]/);
-        
+
         if (imagePathMatch && imagePathMatch[1]) {
           // Extract the image path and clean the response text
           const imagePath = imagePathMatch[1].trim();
-          const cleanedText = responseText.replace(/\[IMAGE_PATH:.*?\]/, '').trim();
-          
+          const cleanedText = responseText
+            .replace(/\[IMAGE_PATH:.*?\]/, "")
+            .trim();
+
           try {
             // Create an attachment from the file
             const attachment = new AttachmentBuilder(imagePath);
-            
+
             // Send the response with the image attachment
             await message.reply({
               content: cleanedText,
-              files: [attachment]
+              files: [attachment],
             });
           } catch (error) {
             console.error("Error attaching image:", error);
@@ -99,7 +112,9 @@ client.on(Events.MessageCreate, async (message: Message) => {
       }
     } catch (error) {
       console.error("Error processing message:", error);
-      await message.reply("Sorry, I encountered an error while processing your request.");
+      await message.reply(
+        "Sorry, I encountered an error while processing your request."
+      );
     }
   }
 });
