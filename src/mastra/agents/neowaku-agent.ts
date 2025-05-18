@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool } from "../tools/discord";
 import { flyerGeneratorTool } from "../tools/flyer";
@@ -58,7 +58,7 @@ neoわくのサーバーID：1285540688284487702
 working memoryは出力しなくていいよ
 `,
 
-  model: openai("gpt-4o"),
+  model: google("gemini-2.5-flash-preview-04-17"),
   tools: { getContextTool, listChannelsTool, bookingRoomTool, createChannelTool, moveToChannelTool, sendMessageTool, flyerGeneratorTool },
   memory,
 });

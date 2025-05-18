@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { getContextTool, listChannelsTool } from "../tools/discord";
 
@@ -28,7 +28,7 @@ Available tools:
 - Use the listChannelsTool to get a list of all available channels you can access
 
 If the user doesn't specify a channel, you can use listChannelsTool to show them available options.`,
-  model: openai("gpt-4o"),
+  model: google("gemini-2.5-flash-preview-04-17"),
   tools: { getContextTool, listChannelsTool },
   memory,
 });

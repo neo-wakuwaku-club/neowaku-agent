@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { weatherTool } from "../tools/weather-tool";
 
@@ -23,7 +23,7 @@ Your primary function is to help users get weather details for specific location
 - Keep responses concise but informative
  
 Use the weatherTool to fetch current weather data.`,
-  model: openai("gpt-4o"),
+  model: google("gemini-2.5-flash-preview-04-17"),
   tools: { weatherTool },
   memory,
 });

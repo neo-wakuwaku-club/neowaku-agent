@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { Agent } from "@mastra/core/agent";
 import { flyerGeneratorTool } from "../tools/flyer";
 
@@ -45,7 +45,7 @@ You can also provide additional design instructions by using the designInstructi
 - Layout suggestions (e.g., "Place the title at the top with a large font")
 
 Ask for any missing information that would be important for creating an effective flyer.`,
-  model: openai("gpt-4o"),
+  model: google("gemini-2.5-flash-preview-04-17"),
   tools: { flyerGeneratorTool },
   memory,
 });

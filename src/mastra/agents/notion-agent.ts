@@ -7,6 +7,7 @@ import { mcpConfiguration } from "../tools/mcp/mcpConfig";
 // Memory の初期化（任意の設定に合わせて調整）
 const memory = new Memory({
   options: {
+    lastMessages: 10,
     workingMemory: {
       enabled: true,
       template: "text-stream",
@@ -22,41 +23,9 @@ export const NotionAgent = new Agent({
   instructions: `
 あなたはNotionアシスタントです。ユーザーの指示に従い、Notionのデータベースやページを操作します。以下のツールを使用して、タスクを実行してください。
 
-# ツール一覧
-
-## createPage
-新しいページを作成します。
-パラメータ:
-- title: ページのタイトル
-- content: ページの内容
-
-## updatePage
-既存のページを更新します。
-パラメータ:
-- pageId: 更新するページのID
-- content: 更新後の内容
-
-## searchDatabase
-データベース内を検索します。
-パラメータ:
-- query: 検索クエリ
-
-# 使用例
-
-ユーザー: 新しい会議の議事録ページを作成して  
-アシスタント:  
-<createPage>
-  <title>会議の議事録</title>
-  <content>会議の内容をここに記述します。</content>
-</createPage>
-
-ユーザー: 先週のタスク一覧を表示して  
-アシスタント:  
-<searchDatabase>
-  <query>先週のタスク</query>
-</searchDatabase>
+notion page id : 1bc5f6ca76de800ab79ccc1451a2b736 
       `,
-  model: openai("gpt-4o"),
+  model: openai("o4-mini-2025-04-16"),
   tools,
   memory,
 });
