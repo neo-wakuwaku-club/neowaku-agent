@@ -57,8 +57,14 @@ client.on(Events.MessageCreate, async (message: Message) => {
       console.log(`thread ${threadId}, resource ${resourceId}`);
 
       try {
-        // Create a message with Discord context information
-        const messageWithContext = `${content}`;
+        // Create a message with Discord context information including channel ID and message ID
+        const messageWithContext = `
+このメッセージに関する情報:
+- チャンネルID: ${message.channelId}
+- メッセージID: ${message.id}
+
+ユーザーメッセージ:
+${content}`;
         
         // Use the neoWakuAgent directly
         const result = await neoWakuAgent.generate(messageWithContext, {
